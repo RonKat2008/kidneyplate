@@ -8,12 +8,33 @@ interface MealListItemProps {
 }
 
 export const MealListItem: React.FC<MealListItemProps> = ({ meal, onPress }) => {
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
+  const formatTime = (timestamp: any) => {
+    try {
+      let date: Date;
+      
+      if (timestamp instanceof Date) {
+        date = timestamp;
+      } else if (typeof timestamp === 'string') {
+        date = new Date(timestamp);
+      } else if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp) {
+        // Firestore Timestamp object
+        date = (timestamp as any).toDate();
+      } else if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp) {
+        // Firestore Timestamp-like object
+        date = new Date((timestamp as any).seconds * 1000);
+      } else {
+        date = new Date(); // Fallback to current time
+      }
+      
+      return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+    } catch (error) {
+      console.error('Error formatting meal timestamp:', error);
+      return 'Unknown time';
+    }
   };
 
   const getMealTypeColor = (mealType: string) => {

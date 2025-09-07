@@ -9,13 +9,14 @@ import {
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ChatMessage } from '../types';
-import { aiAPI, mockChatMessages } from '../utils/mockData';
 import {chatBot} from '../api_chat/API'
 const AIChatScreen: React.FC = () => {
-  const [messages, setMessages] = React.useState<ChatMessage[]>(mockChatMessages);
+  const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [inputText, setInputText] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
   const scrollViewRef = React.useRef<ScrollView>(null);
@@ -59,12 +60,33 @@ const AIChatScreen: React.FC = () => {
     }
   };
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-    });
+  const formatTime = (timestamp: any) => {
+    try {
+      let date: Date;
+      
+      if (timestamp instanceof Date) {
+        date = timestamp;
+      } else if (typeof timestamp === 'string') {
+        date = new Date(timestamp);
+      } else if (timestamp && typeof timestamp === 'object' && 'toDate' in timestamp) {
+        // Firestore Timestamp object
+        date = (timestamp as any).toDate();
+      } else if (timestamp && typeof timestamp === 'object' && 'seconds' in timestamp) {
+        // Firestore Timestamp-like object
+        date = new Date((timestamp as any).seconds * 1000);
+      } else {
+        date = new Date(); // Fallback to current time
+      }
+      
+      return date.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+      });
+    } catch (error) {
+      console.error('Error formatting chat timestamp:', error);
+      return 'Unknown time';
+    }
   };
 
   React.useEffect(() => {
@@ -92,26 +114,30 @@ const AIChatScreen: React.FC = () => {
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.aiInfo}>
-            <View style={styles.aiAvatar}>
-              <Ionicons name="medical" size={24} color="white" />
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+          <View style={styles.content}>
+            {/* Header */}
+            <View style={styles.header}>
+              <View style={styles.aiInfo}>
+                <View style={styles.aiAvatar}>
+                  <Ionicons name="medical" size={24} color="white" />
+                </View>
+                <View>
+                  <Text style={styles.aiName}>CKD Nutrition Assistant</Text>
+                  <Text style={styles.aiStatus}>Online • Ready to help</Text>
+                </View>
+              </View>
             </View>
-            <View>
-              <Text style={styles.aiName}>CKD Nutrition Assistant</Text>
-              <Text style={styles.aiStatus}>Online • Ready to help</Text>
-            </View>
-          </View>
-        </View>
 
-        {/* Messages */}
-        <ScrollView 
-          ref={scrollViewRef}
-          style={styles.messagesContainer}
-          contentContainerStyle={styles.messagesContent}
-        >
+            {/* Messages */}
+            <ScrollView 
+              ref={scrollViewRef}
+              style={styles.messagesContainer}
+              contentContainerStyle={styles.messagesContent}
+              keyboardShouldPersistTaps="handled"
+            >
           {messages.map((message) => (
             <View
               key={message.id}
@@ -210,6 +236,8 @@ const AIChatScreen: React.FC = () => {
             ⚠️ This AI assistant provides general information only. Always consult your healthcare provider for medical advice.
           </Text>
         </View>
+          </View>
+        </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -221,6 +249,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8fafc',
   },
   keyboardView: {
+    flex: 1,
+  },
+  content: {
     flex: 1,
   },
   header: {

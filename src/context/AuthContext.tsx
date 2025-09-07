@@ -10,7 +10,8 @@ import {
     signOut,
     onAuthStateChanged,
     User as FirebaseUser,
-    updateProfile
+    updateProfile,
+    sendPasswordResetEmail
   } from 'firebase/auth';
 interface User {
     id: string;
@@ -26,6 +27,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
   signUp: (email: string, password: string, name: string) => Promise<boolean>;
+  resetPassword: (email: string) => Promise<void>;
   isLoading: boolean;
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -133,7 +135,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setIsLoading(false);
     }
   };
-
+  const resetPassword = async (email: string): Promise<void> => {
+    try{
+      await sendPasswordResetEmail(auth, email);
+    } catch (error: any) {
+      console.error('❌ Firebase reset password error:', error.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }
   const signUp = async (email: string, password: string, name: string): Promise<boolean> => {
     try { 
         setIsLoading(true);
@@ -183,6 +193,7 @@ const value: AuthContextType = {
     login,
     logout,
     signUp,
+    resetPassword,
     isLoading,
     setIsAuthenticated, // ✅ Must be here
     setUser,           // ✅ Must be here

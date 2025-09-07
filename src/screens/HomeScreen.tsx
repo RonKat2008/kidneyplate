@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,28 +9,72 @@ import {
 } from 'react-native';
 import { NutrientCard } from '../components/NutrientCard';
 import { MealListItem } from '../components/MealListItem';
-import { doc } from 'firebase/firestore';
-import { db } from '../config/firebase';
-import {getDoc } from 'firebase/firestore';
-import { mockTodaysMeals, mockNutritionGoals, calculateDailyTotals } from '../utils/mockData';
-import { auth } from '../config/firebase';
-import * as NutritionUtils from '../context/UserDataContext';
+import { useFocusEffect } from '@react-navigation/native';
+import * as UserDataContext from '../context/UserDataContext';
 
 
-const HomeScreen: React.FC = async () => {
-  const [refreshing, setRefreshing] = React.useState(false);
-  const [todaysMeals] = React.useState(mockTodaysMeals);
+const HomeScreen: React.FC = () => {
+  const [refreshing, setRefreshing] = useState(false);
+  const [todaysMeals, setTodaysMeals] = useState<any[]>([]);
+  const [nutritionData, setNutritionData] = useState({
+    calories: 0,
+    fiber: 0,
+    phosphorus: 0,
+    potassium: 0,
+    protein: 0,
+    sodium: 0,
+  });
+  const [limits, setLimits] = useState({
+    calories: 2000,
+    fiber: 25,
+    phosphorus: 1000,
+    potassium: 4700,
+    protein: 0.8,
+    sodium: 2300,
+  });
+  const [isLoading, setIsLoading] = useState(true);
 
+  const loadData = async () => {
+    try {
+      console.log('📊 Loading nutrition data for HomeScreen...');
+      const [nutritionData, limitsData, meals] = await Promise.all([
+        UserDataContext.getNutritionDataAsync(),
+        UserDataContext.getLimitsAsync(),
+        UserDataContext.getMealsAsync(),
+      ]);
 
+      setNutritionData(nutritionData);
+      setLimits(limitsData);
+      setTodaysMeals(meals);
+      console.log('✅ HomeScreen data loaded successfully');
+    } catch (error) {
+      console.error('❌ Failed to load HomeScreen data:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const dailyTotals = calculateDailyTotals(todaysMeals);
+  // Load data when screen is focused (to get fresh data after adding meals)
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [])
+  );
 
-  const onRefresh = React.useCallback(() => {
+  // Listen for data changes
+  useEffect(() => {
+    const unsubscribe = UserDataContext.addDataChangeListener(() => {
+      console.log('🔄 HomeScreen received data change notification');
+      loadData();
+    });
+
+    return unsubscribe;
+  }, []);
+
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    // TODO: Fetch fresh data from API
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 1000);
+    await loadData();
+    setRefreshing(false);
   }, []);
 
   const formatDate = (date: Date) => {
@@ -41,6 +85,16 @@ const HomeScreen: React.FC = async () => {
       day: 'numeric',
     });
   };
+
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -63,29 +117,29 @@ const HomeScreen: React.FC = async () => {
             <View style={styles.nutrientCards}>
               <NutrientCard
                 title="Sodium"
-                current={NutritionUtils.getSodium()}
-                goal={NutritionUtils.getSodiumLimit()}
+                current={nutritionData.sodium}
+                goal={limits.sodium}
                 unit="mg"
                 color="#ef4444"
               />
               <NutrientCard
                 title="Potassium"
-                current={NutritionUtils.getPotassium()}
-                goal={NutritionUtils.getPotassiumLimit()}
+                current={nutritionData.potassium}
+                goal={limits.potassium}
                 unit="mg"
                 color="#f59e0b"
               />
               <NutrientCard
                 title="Phosphorus"
-                current={NutritionUtils.getPhosphorus()}
-                goal={NutritionUtils.getPhosphorusLimit()}
+                current={nutritionData.phosphorus}
+                goal={limits.phosphorus}
                 unit="mg"
                 color="#8b5cf6"
               />
               <NutrientCard
                 title="Protein"
-                current={NutritionUtils.getProtein()}
-                goal={NutritionUtils.getProteinLimit()}
+                current={nutritionData.protein}
+                goal={limits.protein}
                 unit="g"
                 color="#22c55e"
               />
@@ -109,7 +163,7 @@ const HomeScreen: React.FC = async () => {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Meals</Text>
           {todaysMeals.length > 0 ? (
-            todaysMeals.map((meal) => (
+            todaysMeals.map((meal: any) => (
               <MealListItem
                 key={meal.id}
                 meal={meal}
@@ -134,7 +188,7 @@ const HomeScreen: React.FC = async () => {
           <Text style={styles.sectionTitle}>Quick Stats</Text>
           <View style={styles.statsGrid}>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{dailyTotals.calories}</Text>
+              <Text style={styles.statValue}>{Math.round(nutritionData.calories)}</Text>
               <Text style={styles.statLabel}>Calories</Text>
             </View>
             <View style={styles.statCard}>
@@ -142,7 +196,7 @@ const HomeScreen: React.FC = async () => {
               <Text style={styles.statLabel}>Meals Logged</Text>
             </View>
             <View style={styles.statCard}>
-              <Text style={styles.statValue}>{Math.round(dailyTotals.fiber)}g</Text>
+              <Text style={styles.statValue}>{Math.round(nutritionData.fiber)}g</Text>
               <Text style={styles.statLabel}>Fiber</Text>
             </View>
           </View>
@@ -246,6 +300,15 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#6b7280',
     textAlign: 'center',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 16,
+    color: '#6b7280',
   },
 });
 

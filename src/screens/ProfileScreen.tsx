@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,27 +9,71 @@ import {
   SafeAreaView,
   Alert,
   Switch,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { User } from '../types';
 import { useAuth } from '../context/AuthContext';
+import { useFocusEffect } from '@react-navigation/native';
+import * as UserDataContext from '../context/UserDataContext';
 
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
   
-  // TODO: Replace with actual user data from context/state management
-  const [userData, setUserData] = React.useState<User>({
-    id: user?.id || '1',
-    email: user?.email || 'user@example.com',
-    name: user?.name || 'John Doe',
-    ckdStage: 3,
-    dietaryPreferences: ['low-sodium', 'low-potassium'],
-    fluidLimit: 1500,
+  // State for user data
+  const [userData, setUserData] = useState<any>({
+    id: user?.id || '',
+    email: user?.email || '',
+    name: user?.name || '',
+    ckdStage: 'N/A',
+    dietaryPreferences: [],
+    fluidLimit: null,
+    egfrValue: null,
+    doctorNotes: '',
   });
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedUser, setEditedUser] = useState<any>(userData);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [isEditing, setIsEditing] = React.useState(false);
-  const [editedUser, setEditedUser] = React.useState<User>(userData);
-  const [notificationsEnabled, setNotificationsEnabled] = React.useState(true);
+  // Load user data when screen is focused
+  const loadUserData = async () => {
+    try {
+      setIsLoading(true);
+      console.log('📊 Loading user profile data...');
+      
+      const ckdData = await UserDataContext.getCkdDataAsync();
+      const currentUser = UserDataContext.getCurrentUserEmail();
+      const currentUserId = UserDataContext.getCurrentUserId();
+      
+      const loadedUserData = {
+        id: currentUserId,
+        email: currentUser,
+        name: user?.name || currentUser.split('@')[0] || 'User',
+        ckdStage: ckdData.ckdStage,
+        dietaryPreferences: ckdData.dietaryPreferences,
+        fluidLimit: ckdData.fluidLimit,
+        egfrValue: ckdData.egfrValue,
+        doctorNotes: ckdData.doctorNotes,
+      };
+      
+      setUserData(loadedUserData);
+      setEditedUser(loadedUserData);
+      console.log('✅ User profile data loaded successfully');
+    } catch (error) {
+      console.error('❌ Failed to load user profile data:', error);
+      Alert.alert('Error', 'Failed to load profile data');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadUserData();
+    }, [])
+  );
 
   const ckdStages = [
     { value: 1, label: 'Stage 1 (Normal to high)' },
@@ -37,28 +81,42 @@ const ProfileScreen: React.FC = () => {
     { value: 3, label: 'Stage 3 (Moderate decrease)' },
     { value: 4, label: 'Stage 4 (Severe decrease)' },
     { value: 5, label: 'Stage 5 (Kidney failure)' },
+    { value: 'N/A', label: 'N/A' },
   ];
 
   const dietaryOptions = [
-    { key: 'low-sodium', label: 'Low Sodium' },
-    { key: 'low-potassium', label: 'Low Potassium' },
-    { key: 'low-phosphorus', label: 'Low Phosphorus' },
-    { key: 'low-protein', label: 'Low Protein' },
-    { key: 'diabetic-friendly', label: 'Diabetic Friendly' },
-    { key: 'vegetarian', label: 'Vegetarian' },
-    { key: 'vegan', label: 'Vegan' },
+    { key: 'Low Sodium', label: 'Low Sodium' },
+    { key: 'Low Potassium', label: 'Low Potassium' },
+    { key: 'Low Phosphorus', label: 'Low Phosphorus' },
+    { key: 'Low Protein', label: 'Low Protein' },
+    { key: 'Diabetic Friendly', label: 'Diabetic Friendly' },
+    { key: 'Heart Healthy', label: 'Heart Healthy' },
+    { key: 'Vegetarian', label: 'Vegetarian' },
+    { key: 'Vegan', label: 'Vegan' },
+    { key: 'Gluten Free', label: 'Gluten Free' },
+    { key: 'N/A', label: 'N/A' },
   ];
 
   const handleSave = async () => {
     try {
-      // TODO: Replace with actual API call to update user profile
-      console.log('Saving user profile:', editedUser);
+      console.log('💾 Saving profile changes...');
+      
+      // Update CKD data in Firebase
+      await UserDataContext.updateCkdDataAsync({
+        ckdStage: editedUser.ckdStage,
+        dietaryPreferences: editedUser.dietaryPreferences,
+        fluidLimit: editedUser.fluidLimit,
+        egfrValue: editedUser.egfrValue,
+        doctorNotes: editedUser.doctorNotes,
+      });
       
       setUserData(editedUser);
       setIsEditing(false);
       Alert.alert('Success', 'Profile updated successfully!');
+      console.log('✅ Profile saved successfully');
     } catch (error) {
-      Alert.alert('Error', 'Failed to update profile. Please try again.');
+      console.error('❌ Failed to save profile:', error);
+      Alert.alert('Error', 'Failed to save profile changes');
     }
   };
 
@@ -68,10 +126,10 @@ const ProfileScreen: React.FC = () => {
   };
 
   const toggleDietaryPreference = (preference: string) => {
-    setEditedUser(prev => ({
+    setEditedUser((prev: any) => ({
       ...prev,
       dietaryPreferences: prev.dietaryPreferences.includes(preference)
-        ? prev.dietaryPreferences.filter(p => p !== preference)
+        ? prev.dietaryPreferences.filter((p: string) => p !== preference)
         : [...prev.dietaryPreferences, preference],
     }));
   };
@@ -131,7 +189,13 @@ const ProfileScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView}>
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#0ea5e9" />
+          <Text style={styles.loadingText}>Loading profile...</Text>
+        </View>
+      ) : (
+        <ScrollView style={styles.scrollView}>
         {/* Profile Header */}
         <View style={styles.profileHeader}>
           <View style={styles.avatarContainer}>
@@ -166,12 +230,12 @@ const ProfileScreen: React.FC = () => {
           <ProfileField
             label="Full Name"
             value={editedUser.name}
-            onChangeText={(text) => setEditedUser(prev => ({ ...prev, name: text }))}
+            onChangeText={(text) => setEditedUser((prev: any) => ({ ...prev, name: text }))}
           />
           <ProfileField
             label="Email"
             value={editedUser.email}
-            onChangeText={(text) => setEditedUser(prev => ({ ...prev, email: text }))}
+            onChangeText={(text) => setEditedUser((prev: any) => ({ ...prev, email: text }))}
             keyboardType="email-address"
             editable={false}
           />
@@ -191,7 +255,7 @@ const ProfileScreen: React.FC = () => {
                       editedUser.ckdStage === stage.value && styles.stageButtonSelected,
                       !isEditing && styles.stageButtonDisabled,
                     ]}
-                    onPress={() => isEditing && setEditedUser(prev => ({ ...prev, ckdStage: stage.value as any }))}
+                    onPress={() => isEditing && setEditedUser((prev: any) => ({ ...prev, ckdStage: stage.value as any }))}
                     disabled={!isEditing}
                   >
                     <Text
@@ -214,7 +278,7 @@ const ProfileScreen: React.FC = () => {
           <ProfileField
             label="Daily Fluid Limit (mL)"
             value={editedUser.fluidLimit?.toString() || ''}
-            onChangeText={(text) => setEditedUser(prev => ({ 
+            onChangeText={(text) => setEditedUser((prev: any) => ({
               ...prev, 
               fluidLimit: text ? parseInt(text) : undefined 
             }))}
@@ -250,6 +314,37 @@ const ProfileScreen: React.FC = () => {
                 )}
               </TouchableOpacity>
             ))}
+          </View>
+        </ProfileSection>
+
+        {/* eGFR Information */}
+        <ProfileSection title="eGFR Value">
+          <ProfileField
+            label="eGFR (mL/min/1.73m²)"
+            value={editedUser.egfrValue?.toString() || ''}
+            onChangeText={(text) => setEditedUser((prev: any) => ({ 
+              ...prev, 
+              egfrValue: text ? parseFloat(text) : null 
+            }))}
+            keyboardType="numeric"
+            placeholder="e.g., 60"
+          />
+        </ProfileSection>
+
+        {/* Doctor Notes */}
+        <ProfileSection title="Doctor Notes">
+          <View style={styles.inputContainer}>
+            <Text style={styles.inputLabel}>Notes from your doctor</Text>
+            <TextInput
+              style={[styles.textArea, !isEditing && styles.inputDisabled]}
+              value={editedUser.doctorNotes || ''}
+              onChangeText={(text) => setEditedUser((prev: any) => ({ ...prev, doctorNotes: text }))}
+              placeholder="Any specific dietary instructions from your doctor..."
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              editable={isEditing}
+            />
           </View>
         </ProfileSection>
 
@@ -303,6 +398,7 @@ const ProfileScreen: React.FC = () => {
           <Text style={styles.appInfoText}>CKD Nutrition Tracker</Text>
         </View>
       </ScrollView>
+      )}
     </SafeAreaView>
   );
 };
@@ -521,6 +617,39 @@ const styles = StyleSheet.create({
   appInfoText: {
     fontSize: 12,
     color: '#9ca3af',
+  },
+  inputContainer: {
+    marginVertical: 8,
+  },
+  inputLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 8,
+  },
+  textArea: {
+    borderWidth: 1,
+    borderColor: '#d1d5db',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    backgroundColor: 'white',
+    minHeight: 100,
+  },
+  inputDisabled: {
+    backgroundColor: '#f9fafb',
+    color: '#6b7280',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#6b7280',
   },
 });
 

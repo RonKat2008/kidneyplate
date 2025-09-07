@@ -1,7 +1,33 @@
 import { auth } from '../config/firebase';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { arrayRemove, arrayUnion, doc, getDoc, increment, setDoc, updateDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { MealEntry } from '../types';
+
+// Simple event emitter for data changes
+type DataChangeListener = () => void;
+const dataChangeListeners: DataChangeListener[] = [];
+
+export function addDataChangeListener(listener: DataChangeListener): () => void {
+  dataChangeListeners.push(listener);
+  return () => {
+    const index = dataChangeListeners.indexOf(listener);
+    if (index > -1) {
+      dataChangeListeners.splice(index, 1);
+    }
+  };
+}
+
+function notifyDataChange(): void {
+  console.log('📢 Notifying data change to', dataChangeListeners.length, 'listeners');
+  dataChangeListeners.forEach(listener => {
+    try {
+      listener();
+    } catch (error) {
+      console.error('❌ Error in data change listener:', error);
+    }
+  });
+}
 
 // TODO: Replace with backend API calls when ready
 // Ensure user is authenticated before using this context
@@ -66,10 +92,7 @@ function getCachedDailyData(): any {
   return dailyDataCache;
 }
 
-// ----- Async Data Loading Functions -----
-export async function loadUserData(): Promise<void> {
-  await ensureUserDataLoaded();
-}
+
 
 // ----- Nutrition Data Functions -----
 export function getCalories(): number {
@@ -289,5 +312,140 @@ export function getCurrentUserEmail(): string {
   return user.email || '';
 }
 
+
+// Function to invalidate cache and force refresh
+function invalidateCache(): void {
+  userDataCache = null;
+  dailyDataCache = null;
+  lastFetchDate = null;
+  console.log('🔄 Cache invalidated, will refresh on next access');
+  // Notify all listeners that data has changed
+  notifyDataChange();
+}
+
+export async function logMeal(mealEntry: MealEntry): Promise<boolean> {
+  try {
+    console.log('Logging meal entry:', mealEntry);
+    const uid = getCurrentUserId();
+    const today = new Date();
+    const dateKey = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+    console.log('🚀 Initializing daily data for user:', uid, 'Date:', dateKey);
+
+    // TODO: Replace Firestore with backend API call
+    const dailyDocRef = doc(db, 'users', uid, 'history', dateKey);
+    const dailyDataDoc = await getDoc(dailyDocRef);
+
+    if (!dailyDataDoc.exists()) {
+      console.log('⚠️ Creating new daily data for user:', uid, 'Date:', dateKey);
+      // Create the document if it doesn't exist
+      await setDoc(dailyDocRef, {
+        meals: [mealEntry],
+        calories: mealEntry.nutrients.calories,
+        protein: mealEntry.nutrients.protein,
+        sodium: mealEntry.nutrients.sodium,
+        potassium: mealEntry.nutrients.potassium,
+        phosphorus: mealEntry.nutrients.phosphorus,
+        fiber: mealEntry.nutrients.fiber,
+        date: dateKey,
+      });
+    } else {
+      await updateDoc(dailyDocRef, {
+        meals: arrayUnion(mealEntry),
+        calories: increment(mealEntry.nutrients.calories),
+        protein: increment(mealEntry.nutrients.protein),
+        sodium: increment(mealEntry.nutrients.sodium),
+        potassium: increment(mealEntry.nutrients.potassium),
+        phosphorus: increment(mealEntry.nutrients.phosphorus),
+        fiber: increment(mealEntry.nutrients.fiber),
+      });
+    }
+
+    // Invalidate cache to force refresh
+    invalidateCache();
+    
+    console.log('✅ Meal logged successfully for', uid, dateKey);
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to log meal:', error);
+    return false;
+  }
+}
+
+export async function deleteMeal(mealId: string): Promise<boolean> {
+  try {
+    console.log('Deleting meal entry with ID:', mealId);
+    const uid = getCurrentUserId();
+    const today = new Date();
+    const dateKey = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+
+    const dailyDocRef = doc(db, 'users', uid, 'history', dateKey);
+    const dailyDataDoc = await getDoc(dailyDocRef);
+    if (!dailyDataDoc.exists()) {
+      console.log('⚠️ No daily data found for user:', uid, 'Date:', dateKey);
+      return false;
+    }
+
+    const dailyData = dailyDataDoc.data();
+    const meals = dailyData.meals || [];
+    const mealEntry = meals.find((meal: MealEntry) => meal.id === mealId);
+    if (!mealEntry) {
+      console.log('⚠️ Meal entry not found for ID:', mealId);
+      return false;
+    }
+
+    await updateDoc(dailyDocRef, {
+      meals: arrayRemove(mealEntry), // Remove the entire meal object, not just the ID
+      calories: increment(-mealEntry.nutrients.calories),
+      protein: increment(-mealEntry.nutrients.protein),
+      sodium: increment(-mealEntry.nutrients.sodium),
+      potassium: increment(-mealEntry.nutrients.potassium),
+      phosphorus: increment(-mealEntry.nutrients.phosphorus),
+      fiber: increment(-mealEntry.nutrients.fiber),
+    });
+
+    // Invalidate cache to force refresh
+    invalidateCache();
+    
+    console.log('✅ Meal deleted successfully for', uid, dateKey);
+    return true;
+  } catch (error) {
+    console.error('❌ Failed to delete meal:', error);
+    return false;
+  }
+}
+
 // ----- Update Functions -----
+export async function updateCkdDataAsync(ckdData: {
+  ckdStage: number | string;
+  dietaryPreferences: string[];
+  fluidLimit: number | null;
+  egfrValue: number | null;
+  doctorNotes: string;
+}): Promise<void> {
+  try {
+    const user = getAuthenticatedUser();
+    const userDocRef = doc(db, 'users', user.uid);
+    
+    console.log('💾 Updating CKD data for user:', user.uid);
+    
+    await updateDoc(userDocRef, {
+      ckdStage: ckdData.ckdStage,
+      dietaryPreferences: ckdData.dietaryPreferences,
+      fluidLimit: ckdData.fluidLimit,
+      egfrValue: ckdData.egfrValue,
+      doctorNotes: ckdData.doctorNotes,
+      updatedAt: new Date(),
+    });
+    
+    // Invalidate cache to force refresh
+    invalidateCache();
+    
+    console.log('✅ CKD data updated successfully');
+  } catch (error) {
+    console.error('❌ Failed to update CKD data:', error);
+    throw error;
+  }
+}
+
 // TODO: Replace with backend 

@@ -94,6 +94,13 @@ const LoginScreen: React.FC = () => {
               </Text>
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={styles.resetPasswordButton}
+              onPress={() => navigation.navigate('ResetPassword')}
+            >
+              <Text style={styles.resetPasswordText}>Forgot Password?</Text>
+            </TouchableOpacity>
+
             <View style={styles.signUpContainer}>
               <Text style={styles.signUpText}>Don't have an account? </Text>
               <TouchableOpacity onPress={navigateToSignUp}>
@@ -164,6 +171,16 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#ffffff',
     fontSize: 16,
+    fontWeight: '600',
+  },
+  resetPasswordButton: {
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  resetPasswordText: {
+    fontSize: 14,
+    color: '#0ea5e9',
     fontWeight: '600',
   },
   signUpContainer: {

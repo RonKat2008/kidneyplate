@@ -9,9 +9,9 @@ import LoginScreen from '../screens/LoginScreen';
 import SignUpScreen from '../screens/SignUpScreen';
 import VerifyEmailScreen from '../screens/VerifyEmailScreen';
 import CKDOnboardingScreen from '../screens/CKDOnboardingScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import HomeScreen from '../screens/HomeScreen';
 import MealLogScreen from '../screens/MealLogScreen';
-import LabTrackerScreen from '../screens/LabTrackerScreen';
 import AIChatScreen from '../screens/AIChatScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 
@@ -28,6 +28,7 @@ const AuthNavigator = () => {
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
+      <AuthStack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <AuthStack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
       <AuthStack.Screen name="CKDOnboarding" component={CKDOnboardingScreen} />
     </AuthStack.Navigator>
@@ -46,8 +47,6 @@ const MainTabNavigator = () => {
             iconName = focused ? 'home' : 'home-outline';
           } else if (route.name === 'MealLog') {
             iconName = focused ? 'restaurant' : 'restaurant-outline';
-          } else if (route.name === 'LabTracker') {
-            iconName = focused ? 'medical' : 'medical-outline';
           } else if (route.name === 'AIChat') {
             iconName = focused ? 'chatbubble' : 'chatbubble-outline';
           } else if (route.name === 'Profile') {
@@ -61,9 +60,25 @@ const MainTabNavigator = () => {
         tabBarActiveTintColor: '#0ea5e9',
         tabBarInactiveTintColor: '#6b7280',
         tabBarStyle: {
-          paddingBottom: 5,
-          paddingTop: 5,
-          height: 60,
+          backgroundColor: 'white',
+          borderTopWidth: 1,
+          borderTopColor: '#e5e7eb',
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 65,
+          shadowColor: '#000',
+          shadowOffset: {
+            width: 0,
+            height: -2,
+          },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
+          elevation: 8,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '600',
+          marginTop: 2,
         },
         headerStyle: {
           backgroundColor: '#0ea5e9',
@@ -83,11 +98,6 @@ const MainTabNavigator = () => {
         name="MealLog" 
         component={MealLogScreen}
         options={{ title: 'Meals' }}
-      />
-      <Tab.Screen 
-        name="LabTracker" 
-        component={LabTrackerScreen}
-        options={{ title: 'Lab Values' }}
       />
       <Tab.Screen 
         name="AIChat" 

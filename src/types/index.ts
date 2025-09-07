@@ -33,6 +33,7 @@ export interface MealEntry {
   foodItem: FoodItem;
   quantity: number;
   timestamp: Date;
+  nutrients: NutrientData;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
 }
 
@@ -75,12 +76,12 @@ export type AuthStackParamList = {
   SignUp: undefined;
   VerifyEmail: undefined;
   CKDOnboarding: undefined;
+  ResetPassword: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
   MealLog: undefined;
-  LabTracker: undefined;
   AIChat: undefined;
   Profile: undefined;
 };
