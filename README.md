@@ -73,7 +73,9 @@ src/
 │   ├── SignUpScreen.tsx    # User registration
 │   ├── HomeScreen.tsx      # Dashboard/home
 │   ├── MealLogScreen.tsx   # Food logging
-│   ├── LabTrackerScreen.tsx # Lab values
+│   ├── CKDOnboardingScreen.tsx
+|   |── ResetPasswordScreen.tsx
+|   |── VerifyEmailScreen.tsx
 │   ├── AIChatScreen.tsx    # AI assistant
 │   └── ProfileScreen.tsx   # User profile
 ├── types/              # TypeScript interfaces
