@@ -13,13 +13,75 @@ import {
   TouchableWithoutFeedback,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import Markdown from 'react-native-markdown-display';
 import { ChatMessage } from '../types';
-import {chatBot} from '../api_chat/API'
+import { chatBot, chatBotWithContext } from '../api_chat/API';
+import * as UserDataContext from '../context/UserDataContext';
 const AIChatScreen: React.FC = () => {
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [inputText, setInputText] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
+  const [userContext, setUserContext] = React.useState<any>(null);
+  const [dailyNutrition, setDailyNutrition] = React.useState<any>(null);
   const scrollViewRef = React.useRef<ScrollView>(null);
+
+  // Load user context and daily nutrition data when component mounts
+  React.useEffect(() => {
+    const loadUserData = async () => {
+      try {
+        console.log('🤖 Loading user context for AI chat...');
+        
+        // Load CKD data
+        const ckdData = await UserDataContext.getCkdDataAsync();
+        setUserContext({
+          ckdStage: ckdData.ckdStage,
+          fluidLimit: ckdData.fluidLimit,
+          dietaryPreferences: ckdData.dietaryPreferences,
+          egfrValue: ckdData.egfrValue,
+          doctorNotes: ckdData.doctorNotes,
+        });
+
+        // Load today's nutrition data
+        const todaysData = await UserDataContext.getNutritionDataAsync();
+        setDailyNutrition({
+          calories: todaysData.calories || 0,
+          protein: todaysData.protein || 0,
+          sodium: todaysData.sodium || 0,
+          potassium: todaysData.potassium || 0,
+          phosphorus: todaysData.phosphorus || 0,
+          fiber: todaysData.fiber || 0,
+        });
+
+        console.log('✅ User context loaded for AI chat');
+      } catch (error) {
+        console.error('❌ Failed to load user context:', error);
+      }
+    };
+
+    loadUserData();
+
+    // Add listener for nutrition data changes (when meals are logged/deleted)
+    const removeListener = UserDataContext.addDataChangeListener(async () => {
+      try {
+        console.log('🔄 Updating nutrition data for AI context...');
+        const updatedNutritionData = await UserDataContext.getNutritionDataAsync();
+        setDailyNutrition({
+          calories: updatedNutritionData.calories || 0,
+          protein: updatedNutritionData.protein || 0,
+          sodium: updatedNutritionData.sodium || 0,
+          potassium: updatedNutritionData.potassium || 0,
+          phosphorus: updatedNutritionData.phosphorus || 0,
+          fiber: updatedNutritionData.fiber || 0,
+        });
+      } catch (error) {
+        console.error('❌ Failed to update nutrition data:', error);
+      }
+    });
+
+    return () => {
+      removeListener();
+    };
+  }, []);
 
   const sendMessage = async () => {
     if (!inputText.trim()) return;
@@ -36,8 +98,23 @@ const AIChatScreen: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // TODO: Replace with actual AI API call
-      const response = await chatBot(inputText);
+      let response: string;
+      
+      // Use context-aware chatbot if user data is available, otherwise fallback to basic chatbot
+      if (userContext && dailyNutrition) {
+        console.log('🤖 Sending message with user context to AI...');
+        console.log('👤 User Context:', {
+          ckdStage: userContext.ckdStage,
+          fluidLimit: userContext.fluidLimit,
+          dietaryPreferences: userContext.dietaryPreferences,
+          egfrValue: userContext.egfrValue,
+        });
+        console.log('🍽️ Daily Nutrition:', dailyNutrition);
+        response = await chatBotWithContext(inputText, userContext, dailyNutrition);
+      } else {
+        console.log('🤖 Sending message to basic AI (no context available)...');
+        response = await chatBot(inputText);
+      }
       
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -126,7 +203,15 @@ const AIChatScreen: React.FC = () => {
                 </View>
                 <View>
                   <Text style={styles.aiName}>CKD Nutrition Assistant</Text>
-                  <Text style={styles.aiStatus}>Online • Ready to help</Text>
+                  <View style={styles.statusContainer}>
+                    <Text style={styles.aiStatus}>Online • Ready to help</Text>
+                    {userContext && dailyNutrition && (
+                      <View style={styles.contextIndicator}>
+                        <Ionicons name="checkmark-circle" size={12} color="#10b981" />
+                        <Text style={styles.contextText}>Personalized</Text>
+                      </View>
+                    )}
+                  </View>
                 </View>
               </View>
             </View>
@@ -152,14 +237,22 @@ const AIChatScreen: React.FC = () => {
                   message.isUser ? styles.userMessageBubble : styles.aiMessageBubble,
                 ]}
               >
-                <Text
-                  style={[
-                    styles.messageText,
-                    message.isUser ? styles.userMessageText : styles.aiMessageText,
-                  ]}
-                >
-                  {message.text}
-                </Text>
+                {message.isUser ? (
+                  <Text
+                    style={[
+                      styles.messageText,
+                      styles.userMessageText,
+                    ]}
+                  >
+                    {message.text}
+                  </Text>
+                ) : (
+                  <Markdown
+                    style={markdownStyles}
+                  >
+                    {message.text}
+                  </Markdown>
+                )}
                 <Text
                   style={[
                     styles.messageTime,
@@ -415,6 +508,112 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 16,
   },
+  statusContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  contextIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#ecfdf5',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 10,
+    gap: 4,
+  },
+  contextText: {
+    fontSize: 10,
+    color: '#10b981',
+    fontWeight: '500',
+  },
 });
+
+// Markdown styles for AI messages
+const markdownStyles = {
+  body: {
+    fontSize: 16,
+    color: '#1f2937',
+    lineHeight: 22,
+  },
+  heading1: {
+    fontSize: 20,
+    fontWeight: 'bold' as const,
+    color: '#1f2937',
+    marginVertical: 8,
+  },
+  heading2: {
+    fontSize: 18,
+    fontWeight: 'bold' as const,
+    color: '#1f2937',
+    marginVertical: 6,
+  },
+  heading3: {
+    fontSize: 16,
+    fontWeight: 'bold' as const,
+    color: '#1f2937',
+    marginVertical: 4,
+  },
+  paragraph: {
+    fontSize: 16,
+    color: '#1f2937',
+    lineHeight: 22,
+    marginVertical: 4,
+  },
+  strong: {
+    fontWeight: 'bold' as const,
+    color: '#1f2937',
+  },
+  em: {
+    fontStyle: 'italic' as const,
+    color: '#1f2937',
+  },
+  list_item: {
+    fontSize: 16,
+    color: '#1f2937',
+    lineHeight: 22,
+    marginVertical: 2,
+  },
+  bullet_list: {
+    marginVertical: 4,
+  },
+  ordered_list: {
+    marginVertical: 4,
+  },
+  code_inline: {
+    backgroundColor: '#f3f4f6',
+    padding: 2,
+    borderRadius: 4,
+    fontSize: 14,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    color: '#374151',
+  },
+  fence: {
+    backgroundColor: '#f3f4f6',
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 8,
+    fontSize: 14,
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+    color: '#374151',
+  },
+  blockquote: {
+    backgroundColor: '#f9fafb',
+    borderLeftWidth: 4,
+    borderLeftColor: '#0ea5e9',
+    paddingLeft: 12,
+    paddingVertical: 8,
+    marginVertical: 8,
+  },
+  link: {
+    color: '#0ea5e9',
+    textDecorationLine: 'underline' as const,
+  },
+  hr: {
+    backgroundColor: '#e5e7eb',
+    height: 1,
+    marginVertical: 16,
+  },
+};
 
 export default AIChatScreen;

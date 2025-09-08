@@ -69,6 +69,8 @@ export interface ChatMessage {
 export type RootStackParamList = {
   Auth: undefined;
   Main: undefined;
+  TermsOfService: undefined;
+  PrivacyPolicy: undefined;
 };
 
 export type AuthStackParamList = {

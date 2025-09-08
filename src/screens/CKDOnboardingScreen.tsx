@@ -67,6 +67,7 @@ const CKDOnboardingScreen: React.FC = () => {
   const navigation = useNavigation<CKDOnboardingNavigationProp>();
   const { setUser, setIsAuthenticated } = useAuth();
   const [isSubmitting, setIsSubmitting] = React.useState(false);
+  const [disclaimerAgreed, setDisclaimerAgreed] = React.useState(false);
   
   const [formData, setFormData] = React.useState<CKDFormData>({
     ckdStage: 'N/A',
@@ -301,12 +302,49 @@ const CKDOnboardingScreen: React.FC = () => {
           />
         </View>
 
+        {/* Medical Disclaimer */}
+        <View style={styles.disclaimerSection}>
+          <View style={styles.disclaimerHeader}>
+            <Ionicons name="medical" size={24} color="#dc2626" />
+            <Text style={styles.disclaimerTitle}>Important Medical Disclaimer</Text>
+          </View>
+          
+          <View style={styles.disclaimerContent}>
+            <Text style={styles.disclaimerText}>
+              <Text style={styles.disclaimerBold}>KidneyPlate is for informational purposes only and is NOT a medical device.</Text>
+              {'\n\n'}
+              This application provides general nutrition tracking and educational information but does not constitute medical advice, diagnosis, or treatment.
+              {'\n\n'}
+              <Text style={styles.disclaimerBold}>Always consult with qualified healthcare professionals</Text> before making any decisions regarding your health, diet, or medical treatment.
+              {'\n\n'}
+              By proceeding, you acknowledge that you understand this is an informational tool and you will not rely solely on this app for medical decisions.
+            </Text>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.checkboxContainer}
+            onPress={() => setDisclaimerAgreed(!disclaimerAgreed)}
+          >
+            <View style={[styles.checkbox, disclaimerAgreed && styles.checkboxChecked]}>
+              {disclaimerAgreed && (
+                <Ionicons name="checkmark" size={16} color="white" />
+              )}
+            </View>
+            <Text style={styles.checkboxText}>
+              I understand and agree to the medical disclaimer above
+            </Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Buttons */}
         <View style={styles.buttonContainer}>
           <TouchableOpacity
-            style={[styles.primaryButton, isSubmitting && styles.buttonDisabled]}
+            style={[
+              styles.primaryButton, 
+              (isSubmitting || !disclaimerAgreed) && styles.buttonDisabled
+            ]}
             onPress={handleSubmit}
-            disabled={isSubmitting}
+            disabled={isSubmitting || !disclaimerAgreed}
           >
             <Ionicons 
               name={isSubmitting ? "hourglass" : "checkmark"} 
@@ -533,6 +571,63 @@ const styles = StyleSheet.create({
     color: '#9ca3af',
     textAlign: 'center',
     lineHeight: 18,
+  },
+  disclaimerSection: {
+    backgroundColor: '#fef2f2',
+    borderWidth: 2,
+    borderColor: '#fecaca',
+    borderRadius: 12,
+    padding: 20,
+    marginVertical: 20,
+  },
+  disclaimerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  disclaimerTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#dc2626',
+    marginLeft: 8,
+  },
+  disclaimerContent: {
+    marginBottom: 20,
+  },
+  disclaimerText: {
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 20,
+  },
+  disclaimerBold: {
+    fontWeight: 'bold',
+    color: '#dc2626',
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderColor: '#d1d5db',
+    borderRadius: 4,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'white',
+    marginTop: 2,
+  },
+  checkboxChecked: {
+    backgroundColor: '#0ea5e9',
+    borderColor: '#0ea5e9',
+  },
+  checkboxText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#374151',
+    lineHeight: 20,
   },
 });
 

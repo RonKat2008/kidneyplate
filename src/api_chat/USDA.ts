@@ -1,6 +1,8 @@
-const API_KEY = "dbHO73RPfnpb8oORlVA41c7R6lv6L2P3hQ630j5M"
+import { Config } from "../config/environment";
 
-const BASE_URL = "https://api.nal.usda.gov/fdc/v1";
+const API_KEY = Config.USDA_API_KEY;
+
+const BASE_URL = Config.USDA_BASE_URL;
 
 
 interface USDANutrient {

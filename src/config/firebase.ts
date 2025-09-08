@@ -1,16 +1,17 @@
 import { initializeApp, getApps } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
+import { Config } from "./environment";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyCJZ0IK6Tfvt45L8h4SVXh8cbFN5QXxHUc",
-  authDomain: "kidneyplatedatabase.firebaseapp.com",
-  databaseURL: "https://kidneyplatedatabase-default-rtdb.firebaseio.com",
-  projectId: "kidneyplatedatabase",
-  storageBucket: "kidneyplatedatabase.appspot.com", // fix the typo here
-  messagingSenderId: "157810271411",
-  appId: "1:157810271411:web:fc9df04e7aa1e7157c7cc6",
-  measurementId: "G-E006GKPQ7G",
+  apiKey: Config.FIREBASE_API_KEY,
+  authDomain: Config.FIREBASE_AUTH_DOMAIN,
+  databaseURL: Config.FIREBASE_DATABASE_URL,
+  projectId: Config.FIREBASE_PROJECT_ID,
+  storageBucket: Config.FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: Config.FIREBASE_MESSAGING_SENDER_ID,
+  appId: Config.FIREBASE_APP_ID,
+  measurementId: Config.FIREBASE_MEASUREMENT_ID,
 };
 
 // Initialize Firebase app only once

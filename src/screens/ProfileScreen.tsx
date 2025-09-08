@@ -10,15 +10,18 @@ import {
   Alert,
   Switch,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { User } from '../types';
 import { useAuth } from '../context/AuthContext';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import * as UserDataContext from '../context/UserDataContext';
+import { Config } from '../config/environment';
 
 const ProfileScreen: React.FC = () => {
   const { user, logout } = useAuth();
+  const navigation = useNavigation();
   
   // State for user data
   const [userData, setUserData] = useState<any>({
@@ -369,20 +372,34 @@ const ProfileScreen: React.FC = () => {
         {/* Account Actions */}
         <ProfileSection title="Account">
           <TouchableOpacity style={styles.actionButton} onPress={() => {
-            // TODO: Navigate to data export screen
-            Alert.alert('Export Data', 'This feature will be available soon.');
+            const email = Config.CONTACT_EMAIL;
+            const subject = 'KidneyPlate Support';
+            const url = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
+            Linking.openURL(url).catch(() => {
+              Alert.alert('Error', `Unable to open email client. Please contact us at ${Config.CONTACT_EMAIL}`);
+            });
           }}>
-            <Ionicons name="download-outline" size={20} color="#0ea5e9" />
-            <Text style={styles.actionButtonText}>Export My Data</Text>
+            <Ionicons name="mail-outline" size={20} color="#0ea5e9" />
+            <View style={styles.contactInfo}>
+              <Text style={styles.actionButtonText}>Contact Support</Text>
+              <Text style={styles.contactEmail}>{Config.CONTACT_EMAIL}</Text>
+            </View>
             <Ionicons name="chevron-forward" size={20} color="#6b7280" />
           </TouchableOpacity>
 
           <TouchableOpacity style={styles.actionButton} onPress={() => {
-            // TODO: Navigate to help/support screen
-            Alert.alert('Support', 'This feature will be available soon.');
+            (navigation as any).navigate('TermsOfService');
           }}>
-            <Ionicons name="help-circle-outline" size={20} color="#0ea5e9" />
-            <Text style={styles.actionButtonText}>Help & Support</Text>
+            <Ionicons name="document-text-outline" size={20} color="#0ea5e9" />
+            <Text style={styles.actionButtonText}>Terms of Service</Text>
+            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton} onPress={() => {
+            (navigation as any).navigate('PrivacyPolicy');
+          }}>
+            <Ionicons name="shield-checkmark-outline" size={20} color="#0ea5e9" />
+            <Text style={styles.actionButtonText}>Privacy Policy</Text>
             <Ionicons name="chevron-forward" size={20} color="#6b7280" />
           </TouchableOpacity>
 
@@ -596,9 +613,17 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   actionButtonText: {
-    flex: 1,
     fontSize: 16,
     color: '#1f2937',
+  },
+  contactInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  contactEmail: {
+    fontSize: 12,
+    color: '#6b7280',
+    marginTop: 2,
   },
   logoutButton: {
     borderTopWidth: 1,

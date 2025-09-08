@@ -106,7 +106,39 @@ src/
    npm install
    ```
 
-3. **Start the development server**
+3. **Environment Configuration**
+
+   Copy the example environment file and configure your API keys and endpoints:
+
+   ```bash
+   cp .env.example .env
+   ```
+
+   Edit the `.env` file with your actual configuration values:
+
+   ```env
+   # Firebase Configuration - Get these from your Firebase project settings
+   EXPO_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key_here
+   EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_project_id.firebaseapp.com
+   EXPO_PUBLIC_FIREBASE_DATABASE_URL=https://your_project_id-default-rtdb.firebaseio.com
+   EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+   EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_project_id.appspot.com
+   EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+   EXPO_PUBLIC_FIREBASE_APP_ID=your_app_id
+   EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+
+   # API Configuration
+   EXPO_PUBLIC_API_URL=http://localhost:8000/
+   EXPO_PUBLIC_USDA_API_KEY=your_usda_api_key_here
+   EXPO_PUBLIC_USDA_BASE_URL=https://api.nal.usda.gov/fdc/v1
+
+   # Contact Information
+   EXPO_PUBLIC_CONTACT_EMAIL=your_contact_email@domain.com
+   ```
+
+   **Important**: Never commit the `.env` file to version control. It's already included in `.gitignore`.
+
+4. **Start the development server**
 
    ```bash
    npm start
@@ -114,7 +146,7 @@ src/
    expo start
    ```
 
-4. **Run on a platform**
+5. **Run on a platform**
    ```bash
    npm run ios     # iOS Simulator
    npm run android # Android Emulator

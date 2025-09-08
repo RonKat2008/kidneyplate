@@ -147,15 +147,13 @@ const HomeScreen: React.FC = () => {
           </ScrollView>
         </View>
 
-        {/* AI Tip of the Day */}
+        {/* Medical Disclaimer */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>💡 Tip of the Day</Text>
+          <Text style={styles.sectionTitle}>⚕️ Important Medical Notice</Text>
           <View style={styles.tipCard}>
             <Text style={styles.tipText}>
-              Remember to space out your protein intake throughout the day! 
-              Eating smaller portions of protein at each meal helps reduce kidney workload.
+              <Text style={styles.boldText}>KidneyPlate is for informational purposes only and is NOT a medical device.</Text> Always consult with qualified healthcare professionals before making any health or dietary decisions. This app does not provide medical advice, diagnosis, or treatment.
             </Text>
-            {/* TODO: Replace with actual AI-generated tips */}
           </View>
         </View>
 
@@ -309,6 +307,10 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 16,
     color: '#6b7280',
+  },
+  boldText: {
+    fontWeight: 'bold',
+    color: '#dc2626',
   },
 });
 
