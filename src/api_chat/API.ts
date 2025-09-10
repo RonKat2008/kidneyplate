@@ -21,12 +21,32 @@ interface DailyNutrition {
 
 export const chatBot = async (message: string): Promise<string> => {
     try {
+        const contextualMessage = {
+            message,
+            userContext: {
+                ckdStage: "N/A",
+                fluidLimit: "N/A",
+                dietaryPreferences: "N/A",
+                egfrValue: "N/A",
+                doctorNotes: "N/A",
+            },
+            dailyNutrition: {
+                calories: "N/A",
+                protein: "N/A",
+                sodium: "N/A",
+                potassium: "N/A",
+                phosphorus: "N/A",
+                fiber: "N/A",
+            },
+            timestamp: new Date().toISOString(),
+        };
+
         const response = await fetch(`${api_url}chatbot`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ message }),
+        body: JSON.stringify({ contextualMessage }),
         });
     
         if (!response.ok) {
@@ -67,7 +87,7 @@ export const chatBotWithContext = async (
             timestamp: new Date().toISOString(),
         };
 
-        const response = await fetch(`${api_url}chatbot-context`, {
+        const response = await fetch(`${api_url}chatbot`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

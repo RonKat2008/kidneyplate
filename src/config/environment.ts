@@ -13,7 +13,7 @@ export const Config = {
   FIREBASE_MEASUREMENT_ID: process.env.EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID || "G-E006GKPQ7G",
 
   // API Configuration
-  API_URL: process.env.EXPO_PUBLIC_API_URL || "http://192.168.1.71:8000/",
+  API_URL: process.env.EXPO_PUBLIC_API_URL || "https://kidneyplatefastapi-production-e1cb.up.railway.app/",
   USDA_API_KEY: process.env.EXPO_PUBLIC_USDA_API_KEY || "dbHO73RPfnpb8oORlVA41c7R6lv6L2P3hQ630j5M",
   USDA_BASE_URL: process.env.EXPO_PUBLIC_USDA_BASE_URL || "https://api.nal.usda.gov/fdc/v1",
 
