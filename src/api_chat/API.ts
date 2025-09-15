@@ -24,29 +24,30 @@ export const chatBot = async (message: string): Promise<string> => {
         const contextualMessage = {
             message,
             userContext: {
-                ckdStage: "N/A",
-                fluidLimit: "N/A",
-                dietaryPreferences: "N/A",
-                egfrValue: "N/A",
-                doctorNotes: "N/A",
+                ckdStage: "N/A", // string allowed
+                fluidLimit: null,
+                dietaryPreferences: [],
+                egfrValue: null,
+                doctorNotes: "",
             },
             dailyNutrition: {
-                calories: "N/A",
-                protein: "N/A",
-                sodium: "N/A",
-                potassium: "N/A",
-                phosphorus: "N/A",
-                fiber: "N/A",
+                calories: null,
+                protein: null,
+                sodium: null,
+                potassium: null,
+                phosphorus: null,
+                fiber: null,
             },
             timestamp: new Date().toISOString(),
         };
-
+        console.log('🤖 Sending message to basic AI:', contextualMessage)
+        console.log('sending jsonified message:', JSON.stringify(contextualMessage));
         const response = await fetch(`${api_url}chatbot`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ contextualMessage }),
+        body: JSON.stringify(contextualMessage),
         });
     
         if (!response.ok) {
@@ -86,7 +87,7 @@ export const chatBotWithContext = async (
             },
             timestamp: new Date().toISOString(),
         };
-
+        console.log(`${api_url}chatbot`);
         const response = await fetch(`${api_url}chatbot`, {
             method: 'POST',
             headers: {

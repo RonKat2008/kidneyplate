@@ -23,6 +23,7 @@ const AIChatScreen: React.FC = () => {
   const [isLoading, setIsLoading] = React.useState(false);
   const [userContext, setUserContext] = React.useState<any>(null);
   const [dailyNutrition, setDailyNutrition] = React.useState<any>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
   const scrollViewRef = React.useRef<ScrollView>(null);
 
   // Load user context and daily nutrition data when component mounts
@@ -96,6 +97,7 @@ const AIChatScreen: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setInputText('');
     setIsLoading(true);
+    setShouldAutoScroll(true); // Auto-scroll when user sends a message
 
     try {
       let response: string;
@@ -110,6 +112,8 @@ const AIChatScreen: React.FC = () => {
           egfrValue: userContext.egfrValue,
         });
         console.log('🍽️ Daily Nutrition:', dailyNutrition);
+        console.log("Sodium value:", dailyNutrition.sodium);
+        console.log("Keys:", Object.keys(dailyNutrition));
         response = await chatBotWithContext(inputText, userContext, dailyNutrition);
       } else {
         console.log('🤖 Sending message to basic AI (no context available)...');
@@ -124,6 +128,7 @@ const AIChatScreen: React.FC = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
+      setShouldAutoScroll(true); // Auto-scroll when AI responds
     } catch (error) {
       const errorMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -132,6 +137,7 @@ const AIChatScreen: React.FC = () => {
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, errorMessage]);
+      setShouldAutoScroll(true); // Auto-scroll when error message is shown
     } finally {
       setIsLoading(false);
     }
@@ -167,11 +173,15 @@ const AIChatScreen: React.FC = () => {
   };
 
   React.useEffect(() => {
-    // Auto scroll to bottom when new messages are added
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  }, [messages]);
+    // Only auto scroll to bottom when shouldAutoScroll is true
+    if (shouldAutoScroll) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+      // Reset the flag after scrolling
+      setShouldAutoScroll(false);
+    }
+  }, [messages, shouldAutoScroll]);
 
   const quickQuestions = [
     "What should I eat today?",
@@ -191,11 +201,11 @@ const AIChatScreen: React.FC = () => {
       <KeyboardAvoidingView 
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 20}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 30 : 20}
       >
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-          <View style={styles.content}>
-            {/* Header */}
+        <View style={styles.content}>
+          {/* Header */}
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
             <View style={styles.header}>
               <View style={styles.aiInfo}>
                 <View style={styles.aiAvatar}>
@@ -215,14 +225,20 @@ const AIChatScreen: React.FC = () => {
                 </View>
               </View>
             </View>
+          </TouchableWithoutFeedback>
 
-            {/* Messages */}
-            <ScrollView 
-              ref={scrollViewRef}
-              style={styles.messagesContainer}
-              contentContainerStyle={styles.messagesContent}
-              keyboardShouldPersistTaps="handled"
-            >
+          {/* Messages */}
+          <ScrollView 
+            ref={scrollViewRef}
+            style={styles.messagesContainer}
+            contentContainerStyle={styles.messagesContent}
+            keyboardShouldPersistTaps="handled"
+            onScrollBeginDrag={() => setShouldAutoScroll(false)} // Disable auto-scroll when user manually scrolls
+            scrollEventThrottle={16}
+            showsVerticalScrollIndicator={true}
+            nestedScrollEnabled={true}
+            removeClippedSubviews={false}
+          >
           {messages.map((message) => (
             <View
               key={message.id}
@@ -329,8 +345,7 @@ const AIChatScreen: React.FC = () => {
             ⚠️ This AI assistant provides general information only. Always consult your healthcare provider for medical advice.
           </Text>
         </View>
-          </View>
-        </TouchableWithoutFeedback>
+        </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
