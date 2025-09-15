@@ -143,6 +143,21 @@ const HomeScreen: React.FC = () => {
                 unit="g"
                 color="#22c55e"
               />
+              <NutrientCard
+                title="Fiber"
+                current={nutritionData.fiber}
+                goal={limits.fiber}
+                unit="g"
+                color="#3b82f6" // blue
+              />
+              <NutrientCard
+                title="Calories"
+                current={nutritionData.calories}
+                goal={limits.calories}
+                unit="kcal"
+                color="#ec4899" // pink
+              />
+
             </View>
           </ScrollView>
         </View>
