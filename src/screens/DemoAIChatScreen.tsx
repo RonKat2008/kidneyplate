@@ -21,46 +21,13 @@ const AIChatScreen: React.FC = () => {
   const [messages, setMessages] = React.useState<ChatMessage[]>([]);
   const [inputText, setInputText] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
-  const [userContext, setUserContext] = React.useState<any>(null);
   const [dailyNutrition, setDailyNutrition] = React.useState<any>(null);
   const [shouldAutoScroll, setShouldAutoScroll] = React.useState(true);
   const scrollViewRef = React.useRef<ScrollView>(null);
 
   // Load user context and daily nutrition data when component mounts
   React.useEffect(() => {
-    const loadUserData = async () => {
-      try {
-        console.log('🤖 Loading user context for AI chat...');
-        
-        // Load CKD data
-        const ckdData = await UserDataContext.getCkdDataAsync();
-        setUserContext({
-          ckdStage: ckdData.ckdStage,
-          fluidLimit: ckdData.fluidLimit,
-          dietaryPreferences: ckdData.dietaryPreferences,
-          egfrValue: ckdData.egfrValue,
-          doctorNotes: ckdData.doctorNotes,
-        });
-
-        // Load today's nutrition data
-        const todaysData = await UserDataContext.getNutritionDataAsync();
-        setDailyNutrition({
-          calories: todaysData.calories || 0,
-          protein: todaysData.protein || 0,
-          sodium: todaysData.sodium || 0,
-          potassium: todaysData.potassium || 0,
-          phosphorus: todaysData.phosphorus || 0,
-          fiber: todaysData.fiber || 0,
-        });
-
-        console.log('✅ User context loaded for AI chat');
-      } catch (error) {
-        console.error('❌ Failed to load user context:', error);
-      }
-    };
-
-    loadUserData();
-
+    
     // Add listener for nutrition data changes (when meals are logged/deleted)
     const removeListener = UserDataContext.addDataChangeListener(async () => {
       try {
@@ -103,23 +70,7 @@ const AIChatScreen: React.FC = () => {
       let response: string;
       
       // Use context-aware chatbot if user data is available, otherwise fallback to basic chatbot
-      if (userContext && dailyNutrition) {
-        console.log('🤖 Sending message with user context to AI...');
-        console.log('👤 User Context:', {
-          ckdStage: userContext.ckdStage,
-          fluidLimit: userContext.fluidLimit,
-          dietaryPreferences: userContext.dietaryPreferences,
-          egfrValue: userContext.egfrValue,
-        });
-        console.log('🍽️ Daily Nutrition:', dailyNutrition);
-        console.log("Sodium value:", dailyNutrition.sodium);
-        console.log("Keys:", Object.keys(dailyNutrition));
-        response = await chatBot(inputText);
-      } else {
-        console.log('🤖 Sending message to basic AI (no context available)...');
-        response = await chatBot(inputText);
-      }
-      
+      response = await chatBot(inputText);
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
         text: response,
@@ -215,12 +166,7 @@ const AIChatScreen: React.FC = () => {
                   <Text style={styles.aiName}>CKD Nutrition Assistant</Text>
                   <View style={styles.statusContainer}>
                     <Text style={styles.aiStatus}>Online • Ready to help</Text>
-                    {userContext && dailyNutrition && (
-                      <View style={styles.contextIndicator}>
-                        <Ionicons name="checkmark-circle" size={12} color="#10b981" />
-                        <Text style={styles.contextText}>Personalized</Text>
-                      </View>
-                    )}
+                    
                   </View>
                 </View>
               </View>

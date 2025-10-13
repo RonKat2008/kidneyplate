@@ -1,8 +1,9 @@
 import { auth } from '../config/firebase';
-import { arrayRemove, arrayUnion, doc, getDoc, increment, setDoc, updateDoc } from 'firebase/firestore';
+import { arrayRemove, arrayUnion, doc, getDoc, increment, setDoc, updateDoc,collection,getDocs } from 'firebase/firestore';
 import { db } from '../config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { MealEntry } from '../types';
+import { get } from 'react-native/Libraries/TurboModule/TurboModuleRegistry';
 
 // Simple event emitter for data changes
 type DataChangeListener = () => void;
@@ -42,6 +43,7 @@ function getAuthenticatedUser() {
 // Cache for user data to avoid repeated Firestore calls
 let userDataCache: any = null;
 let dailyDataCache: any = null;
+let historyCache: any = null;
 let lastFetchDate: string | null = null;
 
 // TODO: Replace with proper React Context pattern for better state management
@@ -58,13 +60,16 @@ async function ensureUserDataLoaded(): Promise<void> {
       console.log('🔄 Loading user data for authenticated user:', userId);
       
       // TODO: Replace Firestore calls with backend API
-      const [userDoc, dailyDoc] = await Promise.all([
+      const [userDoc, dailyDoc, historyDoc] = await Promise.all([
         getDoc(doc(db, 'users', userId)),
-        getDoc(doc(db, 'users', userId, 'history', dateKey))
+        getDoc(doc(db, 'users', userId, 'history', dateKey)),
+        getDocs(collection(db, 'users', userId, 'history'))
       ]);
 
       userDataCache = userDoc.data() || {};
       dailyDataCache = dailyDoc.data() || {};
+      historyCache = historyDoc.docs.map(doc => ({ id: doc.id, ...doc.data() })) || {};
+      console.log('History data:', historyCache);
       lastFetchDate = dateKey;
       
       console.log('✅ User data loaded successfully');
@@ -90,6 +95,13 @@ function getCachedDailyData(): any {
     return {};
   }
   return dailyDataCache;
+}
+function getCachedHistoryData(): any {
+  if (!historyCache) {
+    console.warn('⚠️ History data not loaded. Call ensureUserDataLoaded() first or use async versions.');
+    return {};
+  }
+  return historyCache;
 }
 
 
@@ -182,6 +194,10 @@ export function getEgfrValue(): number | null {
 export function getFluidLimit(): number | null {
   // TODO: Fetch fluid limit from backend API
   return getCachedUserData().fluidLimit || null;
+}
+export function getHistoryData(): any {
+
+  return getCachedHistoryData() || {};
 }
 
 // ----- Async CKD Data Functions (Recommended) -----
@@ -372,11 +388,13 @@ export async function logMeal(mealEntry: MealEntry): Promise<boolean> {
   }
 }
 
-export async function deleteMeal(mealId: string): Promise<boolean> {
+export async function deleteMeal(mealId: string, mealTimestamp: Date): Promise<boolean> {
   try {
+    console.log(mealTimestamp);
+    console.log(mealId);
     console.log('Deleting meal entry with ID:', mealId);
     const uid = getCurrentUserId();
-    const today = new Date();
+    const today = (mealTimestamp as any).toDate?.() ?? mealTimestamp;
     const dateKey = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
 
     const dailyDocRef = doc(db, 'users', uid, 'history', dateKey);

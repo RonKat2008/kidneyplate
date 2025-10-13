@@ -71,6 +71,7 @@ export type RootStackParamList = {
   Main: undefined;
   TermsOfService: undefined;
   PrivacyPolicy: undefined;
+  AIKnowledgeSources: undefined;
 };
 
 export type AuthStackParamList = {
@@ -79,6 +80,12 @@ export type AuthStackParamList = {
   VerifyEmail: undefined;
   CKDOnboarding: undefined;
   ResetPassword: undefined;
+  TermsOfService: undefined;
+  PrivacyPolicy: undefined;
+  deleteAccount: undefined;
+  DemoChatBot: undefined;
+
+
 };
 
 export type MainTabParamList = {

@@ -16,6 +16,8 @@ import HomeScreen from '../screens/HomeScreen';
 import MealLogScreen from '../screens/MealLogScreen';
 import AIChatScreen from '../screens/AIChatScreen';
 import ProfileScreen from '../screens/ProfileScreen';
+import DemoChatBotScreen from '../screens/DemoAIChatScreen';
+import AIKnowledgeSourcesScreen from '../screens/AIKnowledgeSourcesScreen';
 
 import { RootStackParamList, AuthStackParamList, MainTabParamList } from '../types';
 import { AuthProvider, useAuth } from '../context/AuthContext';
@@ -33,6 +35,7 @@ const AuthNavigator = () => {
       <AuthStack.Screen name="ResetPassword" component={ResetPasswordScreen} />
       <AuthStack.Screen name="VerifyEmail" component={VerifyEmailScreen} />
       <AuthStack.Screen name="CKDOnboarding" component={CKDOnboardingScreen} />
+      <AuthStack.Screen name="DemoChatBot" component={DemoChatBotScreen} />
     </AuthStack.Navigator>
   );
 };
@@ -127,6 +130,7 @@ const RootNavigator = () => {
             <Stack.Screen name="Main" component={MainTabNavigator} />
             <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
             <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
+            <Stack.Screen name="AIKnowledgeSources" component={AIKnowledgeSourcesScreen} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />

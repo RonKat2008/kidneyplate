@@ -12,10 +12,10 @@ import {
   Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { FoodItem, MealEntry } from '../types';
+import { FoodItem, MealEntry, NutrientData } from '../types';
 
 import { searchFoods } from '../api_chat/USDA';
-import { logMeal, deleteMeal, addDataChangeListener, getMealsAsync } from '../context/UserDataContext';
+import { logMeal, deleteMeal, addDataChangeListener, getHistoryData } from '../context/UserDataContext';
 // Ensure you have this import for Firestore
 const MealLogScreen: React.FC = () => {
   const [searchQuery, setSearchQuery] = React.useState('');
@@ -26,7 +26,7 @@ const MealLogScreen: React.FC = () => {
   const [isSearching, setIsSearching] = React.useState(false);
   const [showFoodSelection, setShowFoodSelection] = React.useState(false);
   const [showMealHistory, setShowMealHistory] = React.useState(false);
-  const [mealsHistory, setMealsHistory] = React.useState<MealEntry[]>([]);
+  const [nutritionHistory, setNutritionHistory] = React.useState<any[]>([]);
   const [isLoadingMeals, setIsLoadingMeals] = React.useState(false);
 
   // Listen for data changes to refresh meal history
@@ -48,17 +48,31 @@ const MealLogScreen: React.FC = () => {
     { key: 'snack' as const, label: 'Snack', color: '#22c55e' },
   ];
 
-  // Load meals history
+  // Load nutrition history by date
   const loadMealsHistory = async () => {
     setIsLoadingMeals(true);
     try {
-      // TODO: Replace with actual API call
-      const meals = await getMealsAsync();
-      setMealsHistory(meals);
-      console.log('📊 Loaded', meals.length, 'meals for history');
+      // Get history data which should be organized by date
+      const historyData = await getHistoryData();
+      
+      // Convert history object to array format for display
+      // Assuming historyData structure: { "2025-10-05": { nutrition: {...}, meals: [...] }, ... }
+      const historyArray = Object.entries(historyData || {}).map(([date, dayData]: [string, any]) => ({
+        date,
+        calories: dayData.calories || 0,
+        fiber: dayData.fiber || 0,
+        phosphorus: dayData.phosphorus || 0,
+        potassium: dayData.potassium || 0,
+        protein: dayData.protein || 0,
+        sodium: dayData.sodium || 0,
+        meals: dayData.meals || []
+      })).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort by date, newest first
+      
+      setNutritionHistory(historyArray);
+      console.log('📊 Loaded nutrition history for', historyArray.length, 'days');
     } catch (error) {
-      Alert.alert('Error', 'Failed to load meals history');
-      console.error('Failed to load meals:', error);
+      Alert.alert('Error', 'Failed to load nutrition history');
+      console.error('Failed to load nutrition history:', error);
     } finally {
       setIsLoadingMeals(false);
     }
@@ -76,7 +90,7 @@ const MealLogScreen: React.FC = () => {
   };
 
   // Handle meal deletion
-  const handleDeleteMeal = async (mealId: string, mealName: string) => {
+  const handleDeleteMeal = async (mealId: string, mealName: string, mealTimestamp: Date) => {
     Alert.alert(
       'Delete Meal',
       `Are you sure you want to delete "${mealName}"?`,
@@ -91,10 +105,11 @@ const MealLogScreen: React.FC = () => {
           onPress: async () => {
             try {
               // TODO: Replace with actual API call
-              const success = await deleteMeal(mealId);
+              const success = await deleteMeal(mealId, mealTimestamp);
               if (success) {
                 // Reload meals history
                 await loadMealsHistory();
+                setShowMealHistory(false);
                 Alert.alert('Success', 'Meal deleted successfully');
               } else {
                 Alert.alert('Error', 'Failed to delete meal');
@@ -290,13 +305,87 @@ const MealLogScreen: React.FC = () => {
         
         <TouchableOpacity
           style={styles.deleteButton}
-          onPress={() => handleDeleteMeal(item.id, item.foodItem.name)}
+          onPress={() => handleDeleteMeal(item.id, item.foodItem.name, item.timestamp)}
         >
           <Ionicons name="trash-outline" size={20} color="#ef4444" />
         </TouchableOpacity>
       </View>
     );
   };
+
+  const renderNutritionHistoryItem = ({ item }: { item: any }) => (
+    <View style={styles.nutritionHistoryItem}>
+      <View style={styles.nutritionHistoryHeader}>
+        <Text style={styles.nutritionHistoryDate}>
+          {new Date(item.date).toLocaleDateString('en-US', { 
+            weekday: 'short', 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+          })}
+        </Text>
+        <View style={styles.nutritionHistoryBadge}>
+          <Text style={styles.nutritionHistoryBadgeText}>
+            {item.meals.length} meal{item.meals.length !== 1 ? 's' : ''}
+          </Text>
+        </View>
+      </View>
+      
+      <View style={styles.nutritionHistoryNutrients}>
+        <View style={styles.nutrientRow}>
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{Math.round(item.calories)}</Text>
+            <Text style={styles.nutritionLabel}>Calories</Text>
+          </View>
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{Math.round(item.protein)}g</Text>
+            <Text style={styles.nutritionLabel}>Protein</Text>
+          </View>
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{Math.round(item.fiber)}g</Text>
+            <Text style={styles.nutritionLabel}>Fiber</Text>
+          </View>
+        </View>
+        
+        <View style={styles.nutrientRow}>
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{Math.round(item.sodium)}mg</Text>
+            <Text style={styles.nutritionLabel}>Sodium</Text>
+          </View>
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{Math.round(item.potassium)}mg</Text>
+            <Text style={styles.nutritionLabel}>Potassium</Text>
+          </View>
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{Math.round(item.phosphorus)}mg</Text>
+            <Text style={styles.nutritionLabel}>Phosphorus</Text>
+          </View>
+        </View>
+      </View>
+
+      {/* Meals for that day using existing renderMealHistoryItem */}
+      {item.meals.length > 0 && (
+        <View style={styles.dayMealsList}>
+          <Text style={styles.mealsListTitle}>Meals for this day:</Text>
+          <FlatList
+            data={item.meals}
+            renderItem={renderMealHistoryItem}
+            keyExtractor={(meal) => meal.id}
+            scrollEnabled={false}
+            showsVerticalScrollIndicator={false}
+          />
+        </View>
+      )}
+    </View>
+  );
+
+  // Helper function to get meal type color
+  const getMealTypeColor = (mealType: string) => {
+    const type = mealTypes.find(t => t.key === mealType);
+    return type ? type.color : '#6b7280';
+  };
+
+  
 
   return (
     <SafeAreaView style={styles.container}>
@@ -465,7 +554,7 @@ const MealLogScreen: React.FC = () => {
       >
         <SafeAreaView style={styles.modalContainer}>
           <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Today's Meals</Text>
+            <Text style={styles.modalTitle}>Nutrition History</Text>
             <TouchableOpacity style={styles.closeButton} onPress={hideMealsHistory}>
               <Ionicons name="close" size={24} color="#6b7280" />
             </TouchableOpacity>
@@ -475,7 +564,7 @@ const MealLogScreen: React.FC = () => {
             <View style={styles.modalLoadingContainer}>
               <Text style={styles.modalLoadingText}>Loading meals...</Text>
             </View>
-          ) : mealsHistory.length === 0 ? (
+          ) : nutritionHistory.length === 0 ? (
             <View style={styles.emptyMealsContainer}>
               <Ionicons name="restaurant-outline" size={64} color="#9ca3af" />
               <Text style={styles.emptyMealsText}>No meals logged today</Text>
@@ -483,9 +572,9 @@ const MealLogScreen: React.FC = () => {
             </View>
           ) : (
             <FlatList
-              data={mealsHistory}
-              renderItem={renderMealHistoryItem}
-              keyExtractor={(item) => item.id}
+              data={nutritionHistory}
+              renderItem={renderNutritionHistoryItem}
+              keyExtractor={(item) => item.date}
               style={styles.mealsList}
               contentContainerStyle={styles.mealsListContent}
               showsVerticalScrollIndicator={false}
@@ -912,6 +1001,82 @@ const styles = StyleSheet.create({
     backgroundColor: '#fef2f2',
     borderWidth: 1,
     borderColor: '#fecaca',
+  },
+  // Nutrition History Styles
+  nutritionHistoryItem: {
+    backgroundColor: 'white',
+    marginHorizontal: 16,
+    marginVertical: 8,
+    borderRadius: 12,
+    padding: 16,
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.1,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  nutritionHistoryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  nutritionHistoryDate: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#1f2937',
+  },
+  nutritionHistoryBadge: {
+    backgroundColor: '#0ea5e9',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  nutritionHistoryBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: 'white',
+  },
+  nutritionHistoryNutrients: {
+    marginBottom: 16,
+  },
+  nutrientRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  nutritionItem: {
+    flex: 1,
+    alignItems: 'center',
+    backgroundColor: '#f8fafc',
+    padding: 12,
+    borderRadius: 8,
+    marginHorizontal: 4,
+  },
+  nutritionValue: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#1f2937',
+    marginBottom: 4,
+  },
+  nutritionLabel: {
+    fontSize: 10,
+    color: '#6b7280',
+    textAlign: 'center',
+  },
+  dayMealsList: {
+    borderTopWidth: 1,
+    borderTopColor: '#e5e7eb',
+    paddingTop: 16,
+  },
+  mealsListTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1f2937',
+    marginBottom: 12,
   },
 });
 

@@ -20,7 +20,7 @@ import * as UserDataContext from '../context/UserDataContext';
 import { Config } from '../config/environment';
 
 const ProfileScreen: React.FC = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, deleteAccount } = useAuth();
   const navigation = useNavigation();
   
   // State for user data
@@ -147,6 +147,22 @@ const ProfileScreen: React.FC = () => {
             style: 'destructive',
             onPress: () => {
               logout(); // This will automatically navigate back to auth screens
+            }
+          },
+      ]
+    );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account',
+      'Are you sure you want to delete your account? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },          { 
+            text: 'Logout', 
+            style: 'destructive',
+            onPress: () => {
+              deleteAccount(); // This will automatically navigate back to auth screens
             }
           },
       ]
@@ -372,6 +388,14 @@ const ProfileScreen: React.FC = () => {
         {/* Account Actions */}
         <ProfileSection title="Account">
           <TouchableOpacity style={styles.actionButton} onPress={() => {
+            (navigation as any).navigate('AIKnowledgeSources');
+          }}>
+            <Ionicons name="library-outline" size={20} color="#0ea5e9" />
+            <Text style={styles.actionButtonText}>AI Knowledge Sources</Text>
+            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.actionButton} onPress={() => {
             const email = Config.CONTACT_EMAIL;
             const subject = 'KidneyPlate Support';
             const url = `mailto:${email}?subject=${encodeURIComponent(subject)}`;
@@ -406,6 +430,11 @@ const ProfileScreen: React.FC = () => {
           <TouchableOpacity style={[styles.actionButton, styles.logoutButton]} onPress={handleLogout}>
             <Ionicons name="log-out-outline" size={20} color="#ef4444" />
             <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Logout</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[styles.actionButton, styles.logoutButton]} onPress={handleDeleteAccount}>
+            <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+            <Text style={[styles.actionButtonText, styles.logoutButtonText]}>Delete Account</Text>
           </TouchableOpacity>
         </ProfileSection>
 

@@ -107,6 +107,14 @@ const LoginScreen: React.FC = () => {
                 <Text style={styles.signUpLink}>Sign Up</Text>
               </TouchableOpacity>
             </View>
+
+            {/* Demo Button */}
+            <TouchableOpacity
+              style={styles.demoButton}
+              onPress={() => navigation.navigate('DemoChatBot')}
+            >
+              <Text style={styles.demoButtonText}>Try Demo Chat</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -195,6 +203,20 @@ const styles = StyleSheet.create({
   signUpLink: {
     fontSize: 14,
     color: '#0ea5e9',
+    fontWeight: '600',
+  },
+  demoButton: {
+    borderWidth: 2,
+    borderColor: '#0ea5e9',
+    backgroundColor: 'transparent',
+    borderRadius: 8,
+    padding: 16,
+    alignItems: 'center',
+    marginTop: 32,
+  },
+  demoButtonText: {
+    color: '#0ea5e9',
+    fontSize: 16,
     fontWeight: '600',
   },
 });

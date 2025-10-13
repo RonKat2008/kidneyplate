@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {doc, getDoc, setDoc} from 'firebase/firestore';
+import {deleteDoc, doc, getDoc, setDoc} from 'firebase/firestore';
 import {db} from '../config/firebase'; // Adjust the import path as necessary
 import { auth } from '../config/firebase'; // Adjust the import path as necessary
 import { 
@@ -11,7 +11,8 @@ import {
     onAuthStateChanged,
     User as FirebaseUser,
     updateProfile,
-    sendPasswordResetEmail
+    sendPasswordResetEmail,
+    deleteUser
   } from 'firebase/auth';
 interface User {
     id: string;
@@ -29,6 +30,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, name: string) => Promise<boolean>;
   resetPassword: (email: string) => Promise<void>;
   isLoading: boolean;
+  deleteAccount: () => Promise<void>; // ✅ Added to match value object
 }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -186,6 +188,22 @@ const logout = async (): Promise<void> => {
     }
 }
 
+const deleteAccount = async (): Promise<void> => {
+    try {
+        setIsLoading(true);
+        const currentUser = auth.currentUser;
+        if (currentUser) {
+            await deleteUser(currentUser);
+            await deleteDoc(doc(db, 'users', currentUser.uid));
+            setUser(null);
+            setIsAuthenticated(false);
+        }
+    } catch (error) {
+        console.error('Delete account error:', error);
+    } finally {
+        setIsLoading(false);
+    }
+}
 
 const value: AuthContextType = {
     isAuthenticated,
@@ -196,7 +214,8 @@ const value: AuthContextType = {
     resetPassword,
     isLoading,
     setIsAuthenticated, // ✅ Must be here
-    setUser,           // ✅ Must be here
+    setUser,      
+    deleteAccount     // ✅ Must be here
 
 };
   return (
