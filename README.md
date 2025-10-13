@@ -74,10 +74,15 @@ src/
 │   ├── HomeScreen.tsx      # Dashboard/home
 │   ├── MealLogScreen.tsx   # Food logging
 │   ├── CKDOnboardingScreen.tsx
+│   ├── DemoAIChatScreen.tsx #Ddemo Chat bot
 |   |── ResetPasswordScreen.tsx
 |   |── VerifyEmailScreen.tsx
 │   ├── AIChatScreen.tsx    # AI assistant
 │   └── ProfileScreen.tsx   # User profile
+│   ├── PrivacyPolicyScreen.tsx
+│   ├── TermsOfServiceScreen.tsx
+│   ├── AIKnowledgeSourceScreen.tsx
+│   ├── ResetPasswordScreen.tsx
 ├── types/              # TypeScript interfaces
 │   └── index.ts           # All type definitions
 └── utils/              # Utilities and mock data
