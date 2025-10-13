@@ -85,10 +85,6 @@ src/
 │   ├── ResetPasswordScreen.tsx
 ├── types/              # TypeScript interfaces
 │   └── index.ts           # All type definitions
-└── utils/              # Utilities and mock data
-    └── mockData.ts        # Mock API functions and data
-```
-
 ## 🚀 Getting Started
 
 ### Prerequisites
