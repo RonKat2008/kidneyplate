@@ -65,7 +65,9 @@ export async function searchFoods(query: string): Promise<import('../types').Foo
                 sodium: 0,
                 potassium: 0,
                 phosphorus: 0,
-                fiber: 0
+                fiber: 0,
+                fat: 0,
+                suger: 0
             };
             nutrients.forEach(nutrient => {
                 switch(nutrient.nutrientId){
@@ -86,6 +88,12 @@ export async function searchFoods(query: string): Promise<import('../types').Foo
                         break;
                     case 1079: // Fiber
                         nutritionData.fiber = Math.round(nutrient.value || 0);
+                        break;
+                    case 1004: // Total lipid (fat)
+                        nutritionData.fat = Math.round(nutrient.value || 0);
+                        break;
+                    case 1005: // Carbohydrate, by difference (sugar)
+                        nutritionData.suger = Math.round(nutrient.value || 0);
                         break;
                 }
             });

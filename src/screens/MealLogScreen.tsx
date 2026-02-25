@@ -177,6 +177,9 @@ const MealLogScreen: React.FC = () => {
         protein: Math.round(selectedFood.nutrients.protein * Number(quantity)),
         calories: Math.round(selectedFood.nutrients.calories * Number(quantity)),
         fiber: Math.round(selectedFood.nutrients.fiber * Number(quantity)),
+        fat: Math.round(selectedFood.nutrients.fat * Number(quantity)),
+        suger: Math.round(selectedFood.nutrients.suger * Number(quantity)),
+
       },
       mealType,
     };
@@ -215,6 +218,9 @@ const MealLogScreen: React.FC = () => {
       protein: Math.round(selectedFood.nutrients.protein * qty),
       calories: Math.round(selectedFood.nutrients.calories * qty),
       fiber: Math.round(selectedFood.nutrients.fiber * qty),
+      fat: Math.round(selectedFood.nutrients.fat * qty),
+      suger: Math.round(selectedFood.nutrients.suger * qty),
+      
     };
   };
 

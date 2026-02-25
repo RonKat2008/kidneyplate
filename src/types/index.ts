@@ -17,7 +17,9 @@ export interface NutrientData {
   phosphorus: number; // mg
   protein: number;   // g
   calories: number;
-  fiber: number;     // g
+  fiber: number;     // 
+  fat: number;       // g
+  suger: number;     // g
 }
 
 export interface FoodItem {
