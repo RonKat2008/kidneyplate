@@ -351,6 +351,10 @@ const MealLogScreen: React.FC = () => {
             <Text style={styles.nutritionValue}>{Math.round(item.fiber)}g</Text>
             <Text style={styles.nutritionLabel}>Fiber</Text>
           </View>
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{Math.round(item.suger)}g</Text>
+            <Text style={styles.nutritionLabel}>Suger</Text>
+          </View>
         </View>
         
         <View style={styles.nutrientRow}>
@@ -365,6 +369,10 @@ const MealLogScreen: React.FC = () => {
           <View style={styles.nutritionItem}>
             <Text style={styles.nutritionValue}>{Math.round(item.phosphorus)}mg</Text>
             <Text style={styles.nutritionLabel}>Phosphorus</Text>
+          </View>
+          <View style={styles.nutritionItem}>
+            <Text style={styles.nutritionValue}>{Math.round(item.fat)}g</Text>
+            <Text style={styles.nutritionLabel}>Fat</Text>
           </View>
         </View>
       </View>
@@ -502,7 +510,7 @@ const MealLogScreen: React.FC = () => {
                             <Text style={styles.nutrientValue}>{value}</Text>
                             <Text style={styles.nutrientKey}>
                               {key === 'calories' ? 'kcal' : 
-                               key === 'protein' ? 'g' : 'mg'}
+                               key === 'protein' ? 'g' : key === 'suger' ? 'g' : key === 'fat' ? 'g' : 'mg'}
                             </Text>
                             <Text style={styles.nutrientLabel}>{key}</Text>
                           </View>

@@ -153,6 +153,8 @@ export async function getNutritionDataAsync(): Promise<{
   potassium: number;
   protein: number;
   sodium: number;
+  suger: number;
+  fat: number;
   meals: any[];
 }> {
   await ensureUserDataLoaded();
@@ -165,6 +167,8 @@ export async function getNutritionDataAsync(): Promise<{
     potassium: data.potassium || 0,
     protein: data.protein || 0,
     sodium: data.sodium || 0,
+    suger: data.suger || 0,
+    fat: data.fat || 0,
     meals: data.meals || [],
   };
 }
@@ -230,6 +234,8 @@ interface Limits {
   protein: number;
   calories: number;
   fiber: number;
+  suger: number;
+  fat: number;
   fluid: number | null;
 }
 
@@ -244,6 +250,8 @@ function getLimits(): Limits {
     protein: 0.8,
     calories: 2000,
     fiber: 25,
+    suger: 50,
+    fat: 70,
     fluid: null,
   };
 
@@ -257,6 +265,8 @@ function getLimits(): Limits {
       protein: 0.6,
       calories: 2000,
       fiber: 25,
+      suger: 50,
+      fat: 70,
       fluid: null,
     },
     '4': {
@@ -266,6 +276,8 @@ function getLimits(): Limits {
       protein: 0.6,
       calories: 2000,
       fiber: 25,
+      suger: 50,
+      fat: 70,
       fluid: 1500,
     },
     '5': {
@@ -275,6 +287,8 @@ function getLimits(): Limits {
       protein: 0.6,
       calories: 2000,
       fiber: 25,
+      suger: 50,
+      fat: 70,
       fluid: 1000,
     },
     'N/A': defaultLimits,
@@ -305,6 +319,12 @@ export function getCaloriesLimit(): number {
 
 export function getFiberLimit(): number {
   return getLimits().fiber;
+}
+export function getSugerLimit(): number {
+  return getLimits().suger;
+}
+export function getFatLimit(): number {
+  return getLimits().fat;
 }
 
 export function getFluidLimitByStage(): number | null {
@@ -363,6 +383,8 @@ export async function logMeal(mealEntry: MealEntry): Promise<boolean> {
         potassium: mealEntry.nutrients.potassium,
         phosphorus: mealEntry.nutrients.phosphorus,
         fiber: mealEntry.nutrients.fiber,
+        suger: mealEntry.nutrients.suger,
+        fat: mealEntry.nutrients.fat,
         date: dateKey,
       });
     } else {
@@ -374,6 +396,8 @@ export async function logMeal(mealEntry: MealEntry): Promise<boolean> {
         potassium: increment(mealEntry.nutrients.potassium),
         phosphorus: increment(mealEntry.nutrients.phosphorus),
         fiber: increment(mealEntry.nutrients.fiber),
+        suger: increment(mealEntry.nutrients.suger),
+        fat: increment(mealEntry.nutrients.fat),
       });
     }
 
@@ -420,6 +444,8 @@ export async function deleteMeal(mealId: string, mealTimestamp: Date): Promise<b
       potassium: increment(-mealEntry.nutrients.potassium),
       phosphorus: increment(-mealEntry.nutrients.phosphorus),
       fiber: increment(-mealEntry.nutrients.fiber),
+      suger: increment(-mealEntry.nutrients.suger),
+      fat: increment(-mealEntry.nutrients.fat),
     });
 
     // Invalidate cache to force refresh

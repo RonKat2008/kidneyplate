@@ -51,6 +51,8 @@ const initializeDailyData = async (firebaseUser: FirebaseUser) => {
       protein: 0,
       calories: 0,
       fiber: 0,
+      fat: 0,
+      sugar: 0,
       meals: [],
     };
     await setDoc(dailyDocRef, initialData);

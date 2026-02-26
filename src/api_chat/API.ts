@@ -17,6 +17,8 @@ interface DailyNutrition {
   potassium: number;
   phosphorus: number;
   fiber: number;
+  sugar: number;
+  fat: number;
 }
 
 export const chatBot = async (message: string): Promise<string> => {
@@ -37,6 +39,8 @@ export const chatBot = async (message: string): Promise<string> => {
                 potassium: null,
                 phosphorus: null,
                 fiber: null,
+                fat: null,
+                sugar: null,
             },
             timestamp: new Date().toISOString(),
         };
@@ -84,6 +88,8 @@ export const chatBotWithContext = async (
                 potassium: dailyNutrition.potassium,
                 phosphorus: dailyNutrition.phosphorus,
                 fiber: dailyNutrition.fiber,
+                sugar: dailyNutrition.sugar,
+                fat: dailyNutrition.fat,
             },
             timestamp: new Date().toISOString(),
         };

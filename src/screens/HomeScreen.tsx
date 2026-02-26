@@ -23,6 +23,8 @@ const HomeScreen: React.FC = () => {
     potassium: 0,
     protein: 0,
     sodium: 0,
+    suger: 0,
+    fat: 0,
   });
   const [limits, setLimits] = useState({
     calories: 2000,
@@ -31,6 +33,8 @@ const HomeScreen: React.FC = () => {
     potassium: 4700,
     protein: 0.8,
     sodium: 2300,
+    suger: 50,
+    fat: 70,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -128,6 +132,20 @@ const HomeScreen: React.FC = () => {
                 goal={limits.potassium}
                 unit="mg"
                 color="#f59e0b"
+              />
+              <NutrientCard
+                title="Suger"
+                current={nutritionData.suger}
+                goal={limits.suger}
+                unit="g"
+                color="#f97316"
+              />
+              <NutrientCard
+                title="Fat"
+                current={nutritionData.fat}
+                goal={limits.fat}
+                unit="g"
+                color="#0ea5e9"
               />
               <NutrientCard
                 title="Phosphorus"
