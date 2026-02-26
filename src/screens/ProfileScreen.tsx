@@ -387,6 +387,13 @@ const ProfileScreen: React.FC = () => {
 
         {/* Account Actions */}
         <ProfileSection title="Account">
+        <TouchableOpacity style={styles.actionButton} onPress={() => {
+            (navigation as any).navigate('StatsTracking');
+          }}>
+            <Ionicons name="library-outline" size={20} color="#0ea5e9" />
+            <Text style={styles.actionButtonText}>Stats Tracking</Text>
+            <Ionicons name="chevron-forward" size={20} color="#6b7280" />
+          </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={() => {
             (navigation as any).navigate('AIKnowledgeSources');
           }}>

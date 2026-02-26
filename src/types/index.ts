@@ -74,6 +74,7 @@ export type RootStackParamList = {
   TermsOfService: undefined;
   PrivacyPolicy: undefined;
   AIKnowledgeSources: undefined;
+  StatsTracking: undefined;
 };
 
 export type AuthStackParamList = {

@@ -18,6 +18,7 @@ import AIChatScreen from '../screens/AIChatScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import DemoChatBotScreen from '../screens/DemoAIChatScreen';
 import AIKnowledgeSourcesScreen from '../screens/AIKnowledgeSourcesScreen';
+import StatsTracking from '../screens/StatsTracking';
 
 import { RootStackParamList, AuthStackParamList, MainTabParamList } from '../types';
 import { AuthProvider, useAuth } from '../context/AuthContext';
@@ -131,6 +132,7 @@ const RootNavigator = () => {
             <Stack.Screen name="TermsOfService" component={TermsOfServiceScreen} />
             <Stack.Screen name="PrivacyPolicy" component={PrivacyPolicyScreen} />
             <Stack.Screen name="AIKnowledgeSources" component={AIKnowledgeSourcesScreen} />
+            <Stack.Screen name="StatsTracking" component={StatsTracking} />
           </>
         ) : (
           <Stack.Screen name="Auth" component={AuthNavigator} />
